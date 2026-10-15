@@ -4,7 +4,11 @@
 //   npm run ingest -- --dry-run    only show how the files would be chunked (no API, no DB)
 //   options: --dir=<folder>  --collection=<name>
 //
-// Each knowledge file starts with a header block, then short plain-language paragraphs:
+// Two file formats are accepted:
+//  1. Member 4's format: "# Title", "## Section" paragraphs, and a "## Sources" list at the end
+//     ("- Name: https://…" or "1. Name" followed by the link on the next line). Topic comes from
+//     TOPIC_BY_FILE below, language defaults to en.
+//  2. A header block (overrides the above):
 //   ---
 //   title: What is PCOS?
 //   sourceTitle: WHO — Polycystic ovary syndrome fact sheet
@@ -12,7 +16,8 @@
 //   topic: pcos
 //   language: en
 //   ---
-// Re-running is safe: each file's old chunks are replaced, and chunks of deleted files removed.
+// Every chunk carries all of its file's sources. Re-running is safe: each file's old chunks are
+// replaced, and chunks of deleted files removed.
 
 import { createHash } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
@@ -22,7 +27,17 @@ import { embed, EMBEDDING_DIMENSIONS, EMBEDDING_MODEL } from "@/lib/ai/embedding
 
 const MIN_WORDS = 150;
 const MAX_WORDS = 300;
-const REQUIRED = ["title", "sourceTitle", "sourceUrl", "topic", "language"] as const;
+// Topic per knowledge file (used for search filters). Unlisted files get "general".
+const TOPIC_BY_FILE: Record<string, string> = {
+  "pcos-what-is-it.md": "pcos",
+  "acne-and-hair-growth.md": "pcos",
+  "weight-and-insulin.md": "pcos",
+  "tests-doctors-may-suggest.md": "pcos",
+  "myths.md": "pcos",
+  "irregular-periods.md": "menstrual",
+  "when-to-see-a-doctor.md": "care",
+  "which-doctor.md": "care",
+};
 
 const args = process.argv.slice(2);
 const opt = (name: string) => args.find((a) => a.startsWith(`--${name}=`))?.split("=").slice(1).join("=");
@@ -30,7 +45,20 @@ const dryRun = args.includes("--dry-run");
 const dir = path.resolve(opt("dir") ?? path.join(process.cwd(), "content", "knowledge"));
 const collectionName = opt("collection") ?? COLLECTIONS.knowledge;
 
-type Meta = Record<(typeof REQUIRED)[number], string>;
+interface SourceRef {
+  title: string;
+  url: string;
+}
+
+interface Meta {
+  title: string;
+  topic: string;
+  language: string;
+  /** First source, kept for simple display */
+  sourceTitle: string;
+  sourceUrl: string;
+  sources: SourceRef[];
+}
 
 interface ChunkDoc extends Meta {
   text: string;
@@ -45,26 +73,84 @@ interface SearchIndexInfo {
   queryable?: boolean;
 }
 
-function parseFile(file: string, raw: string): { meta: Meta; body: string } {
-  const m = raw.replace(/\r\n/g, "\n").match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!m) throw new Error(`${file}: missing the --- header block at the top`);
-  const meta: Record<string, string> = {};
-  for (const line of m[1].split("\n")) {
-    const kv = line.match(/^\s*([A-Za-z]+)\s*:\s*(.*?)\s*$/);
-    if (kv) meta[kv[1]] = kv[2].replace(/^["']|["']$/g, "");
+const URL_RE = /https?:\/\/[^\s)>\]]+/;
+
+/** Reads a "## Sources" list: "- Name: https://…" or "1. Name" with the link on the next line. */
+function parseSources(section: string): SourceRef[] {
+  const sources: SourceRef[] = [];
+  let pendingTitle = "";
+  for (const line of section.split("\n").map((l) => l.trim()).filter(Boolean)) {
+    const url = line.match(URL_RE)?.[0];
+    const label = line
+      .replace(URL_RE, "")
+      .replace(/^(?:[-*]|\d+\.)\s*/, "")
+      .replace(/[\s:—–-]+$/, "")
+      .trim();
+    if (url) {
+      const title = label || pendingTitle || new URL(url).hostname;
+      if (!sources.some((s) => s.url === url)) sources.push({ title, url });
+      pendingTitle = "";
+    } else if (label) {
+      pendingTitle = label;
+    }
   }
-  const missing = REQUIRED.filter((k) => !meta[k]);
-  if (missing.length) throw new Error(`${file}: header is missing ${missing.join(", ")}`);
-  if (!/^https?:\/\//.test(meta.sourceUrl)) throw new Error(`${file}: sourceUrl must be a link`);
-  return { meta: meta as Meta, body: m[2] };
+  return sources;
+}
+
+function parseFile(file: string, raw: string): { meta: Meta; body: string } {
+  let text = raw.replace(/\r\n/g, "\n");
+  const header: Record<string, string> = {};
+  const fenced = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (fenced) {
+    for (const line of fenced[1].split("\n")) {
+      const kv = line.match(/^\s*([A-Za-z]+)\s*:\s*(.*?)\s*$/);
+      if (kv) header[kv[1]] = kv[2].replace(/^["']|["']$/g, "");
+    }
+    text = fenced[2];
+  }
+
+  // Split off the "## Sources" section (everything after it).
+  const sourcesAt = text.search(/^#{1,3}\s*(sources|references)\s*$/im);
+  const body = sourcesAt >= 0 ? text.slice(0, sourcesAt) : text;
+  const sources = sourcesAt >= 0 ? parseSources(text.slice(sourcesAt).replace(/^.*\n/, "")) : [];
+  if (header.sourceUrl) {
+    sources.unshift({ title: header.sourceTitle || new URL(header.sourceUrl).hostname, url: header.sourceUrl });
+  }
+  if (sources.length === 0) throw new Error(`${file}: no sources found (add a "## Sources" list with links)`);
+
+  const title = header.title || body.match(/^#\s+(.+)$/m)?.[1]?.trim() || file.replace(/\.md$/, "");
+  return {
+    meta: {
+      title,
+      topic: header.topic || TOPIC_BY_FILE[file] || "general",
+      language: header.language || "en",
+      sourceTitle: sources[0].title,
+      sourceUrl: sources[0].url,
+      sources,
+    },
+    // The "# Title" line is stored as `title`, so drop it from the text.
+    body: body.replace(/^#\s+.+$/m, ""),
+  };
 }
 
 const wordCount = (s: string) => s.split(/\s+/).filter(Boolean).length;
 
 /** Groups paragraphs into chunks of ~150-300 words; splits over-long paragraphs by sentence. */
 function chunk(body: string): string[] {
+  // Keep each "## Section" heading attached to the paragraph after it.
+  const paragraphs: string[] = [];
+  let heading = "";
+  for (const p of body.split(/\n\s*\n/).map((s) => s.replace(/\s+/g, " ").trim()).filter(Boolean)) {
+    if (/^#{1,6}\s/.test(p) && wordCount(p) <= 15) {
+      heading = heading ? `${heading} ${p}` : p;
+      continue;
+    }
+    paragraphs.push(heading ? `${heading.replace(/^#+\s*/, "")}: ${p}` : p);
+    heading = "";
+  }
+
   const pieces: string[] = [];
-  for (const para of body.split(/\n\s*\n/).map((p) => p.replace(/\s+/g, " ").trim()).filter(Boolean)) {
+  for (const para of paragraphs) {
     if (wordCount(para) <= MAX_WORDS) {
       pieces.push(para);
       continue;

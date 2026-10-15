@@ -5,7 +5,7 @@ import { GoogleGenAI } from "@google/genai";
 export const EMBEDDING_MODEL = process.env.GEMINI_EMBEDDING_MODEL || "gemini-embedding-2";
 export const EMBEDDING_DIMENSIONS = 768;
 
-const BATCH_SIZE = 50;
+const PARALLEL = 5;
 
 let client: GoogleGenAI | null = null;
 function getClient() {
@@ -19,25 +19,30 @@ function getClient() {
 
 type Purpose = "document" | "query";
 
-/** Embeds texts in batches. Use "document" for knowledge chunks and "query" for searches. */
+async function embedOne(text: string, purpose: Purpose): Promise<number[]> {
+  const res = await getClient().models.embedContent({
+    model: EMBEDDING_MODEL,
+    // One text per request: gemini-embedding-2 is multimodal and merges a list of texts
+    // into a single vector, so batching would give every chunk the same embedding.
+    contents: text,
+    config: {
+      outputDimensionality: EMBEDDING_DIMENSIONS,
+      taskType: purpose === "document" ? "RETRIEVAL_DOCUMENT" : "RETRIEVAL_QUERY",
+      abortSignal: AbortSignal.timeout(10_000),
+    },
+  });
+  const values = res.embeddings?.[0]?.values ?? [];
+  if (res.embeddings?.length !== 1 || values.length !== EMBEDDING_DIMENSIONS) {
+    throw new Error(`Embedding failed: expected 1x${EMBEDDING_DIMENSIONS} vector`);
+  }
+  return values;
+}
+
+/** Embeds texts, a few in parallel. Use "document" for knowledge chunks and "query" for searches. */
 export async function embed(texts: string[], purpose: Purpose): Promise<number[][]> {
   const vectors: number[][] = [];
-  for (let i = 0; i < texts.length; i += BATCH_SIZE) {
-    const batch = texts.slice(i, i + BATCH_SIZE);
-    const res = await getClient().models.embedContent({
-      model: EMBEDDING_MODEL,
-      contents: batch,
-      config: {
-        outputDimensionality: EMBEDDING_DIMENSIONS,
-        taskType: purpose === "document" ? "RETRIEVAL_DOCUMENT" : "RETRIEVAL_QUERY",
-        abortSignal: AbortSignal.timeout(10_000),
-      },
-    });
-    const got = res.embeddings?.map((e) => e.values ?? []) ?? [];
-    if (got.length !== batch.length || got.some((v) => v.length !== EMBEDDING_DIMENSIONS)) {
-      throw new Error(`Embedding failed: expected ${batch.length}x${EMBEDDING_DIMENSIONS} vectors`);
-    }
-    vectors.push(...got);
+  for (let i = 0; i < texts.length; i += PARALLEL) {
+    vectors.push(...(await Promise.all(texts.slice(i, i + PARALLEL).map((t) => embedOne(t, purpose)))));
   }
   return vectors;
 }

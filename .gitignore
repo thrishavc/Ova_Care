@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# credential files downloaded from Atlas etc. (any name)
+*.env
+*credentials*
+!.env.example

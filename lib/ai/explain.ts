@@ -63,12 +63,21 @@ export async function writeExplanation(
   return callGemini<Explanation>(prompt, SCHEMA, { system: loadPrompt("system.md") });
 }
 
-/** Maps the model's source numbers back to unique {title, url} pairs. */
+const MAX_SOURCES = 6;
+
+/** Maps the model's source numbers back to unique {title, url} pairs (all of each passage's sources). */
 export function pickSources(chunks: KnowledgeChunk[], numbers: number[]): Source[] {
   const used = numbers.map((n) => chunks[n - 1]).filter(Boolean);
   const list = used.length > 0 ? used : chunks;
   const seen = new Set<string>();
-  return list
-    .filter((c) => !seen.has(c.sourceUrl) && seen.add(c.sourceUrl))
-    .map((c) => ({ title: c.sourceTitle, url: c.sourceUrl }));
+  const out: Source[] = [];
+  for (const c of list) {
+    for (const s of c.sources?.length ? c.sources : [{ title: c.sourceTitle, url: c.sourceUrl }]) {
+      if (!seen.has(s.url)) {
+        seen.add(s.url);
+        out.push({ title: s.title, url: s.url });
+      }
+    }
+  }
+  return out.slice(0, MAX_SOURCES);
 }

@@ -53,7 +53,10 @@ const KEYWORD_RULES: KeywordRule[] = [
       "sudden severe pain", "unbearable pain", "unbearable stomach pain",
       "bahut tez dard", "bahut tej dard", "achanak tez dard", "achanak tej dard",
       "achanak bahut dard", "sehan nahi", "sahan nahi",
+      "tez pet dard", "tej pet dard", "pet mein tez dard", "pet me tez dard", "pet mein bahut tez",
+      "pet me bahut tez",
       "बहुत तेज दर्द", "अचानक तेज दर्द", "अचानक बहुत दर्द", "असहनीय दर्द",
+      "तेज पेट दर्द", "पेट में तेज दर्द", "पेट में बहुत तेज",
     ]],
   },
   {

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "demo:warm": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/warm-demo-cache.mts",
-    "ingest": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/ingest.mts"
+    "ingest": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/ingest.mts",
+    "retrieve:test": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/try-retrieve.mts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

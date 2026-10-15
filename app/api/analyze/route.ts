@@ -2,6 +2,8 @@ import type { AnalyzeRequest, ApiError } from "@/lib/types";
 import { analyze } from "@/lib/ai/pipeline";
 
 const MAX_TEXT_CHARS = 2000;
+// Plan Phase 4: the whole request (up to two Gemini calls) must answer within 20 s.
+const REQUEST_DEADLINE_MS = 20_000;
 // ~60 s of browser audio is well under this; it also keeps the body under Vercel's 4.5 MB limit.
 const MAX_AUDIO_BASE64_CHARS = 3_500_000;
 // What browser MediaRecorder produces (webm/ogg on Chrome & Firefox, mp4 on Safari) plus common files.
@@ -45,14 +47,32 @@ export async function POST(request: Request) {
     }
   }
 
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<"timeout">((resolve) => {
+    timer = setTimeout(() => resolve("timeout"), REQUEST_DEADLINE_MS);
+  });
+
   try {
-    const result = await analyze({
-      text,
-      audioBase64,
-      audioMimeType,
-      language: body.language ?? "auto",
-      sessionId: body.sessionId ?? "",
-    });
+    // Typed red flags are caught synchronously at the start of analyze(), so the deadline
+    // can never delay or hide an urgent answer for typed text.
+    const result = await Promise.race([
+      analyze({
+        text,
+        audioBase64,
+        audioMimeType,
+        language: body.language ?? "auto",
+        sessionId: body.sessionId ?? "",
+      }),
+      deadline,
+    ]);
+    if (result === "timeout") {
+      console.error(`[analyze] timed out after ${REQUEST_DEADLINE_MS}ms`);
+      return errorResponse(
+        504,
+        "timeout",
+        "This is taking longer than usual. Please try again, or type your symptoms instead.",
+      );
+    }
     return Response.json(result);
   } catch (err) {
     console.error("[analyze] failed:", err instanceof Error ? err.message : err);
@@ -61,5 +81,7 @@ export async function POST(request: Request) {
       "unavailable",
       "Something went wrong while understanding your symptoms. Please try again in a moment.",
     );
+  } finally {
+    clearTimeout(timer);
   }
 }

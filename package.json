@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "demo:warm": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/warm-demo-cache.mts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",
@@ -23,6 +24,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

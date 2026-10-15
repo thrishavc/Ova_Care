@@ -1,9 +1,17 @@
-import { ApiError, GoogleGenAI, type Part } from "@google/genai";
+import { ApiError, GoogleGenAI, ThinkingLevel, type Part } from "@google/genai";
 
-// Free-tier fast model. Override with GEMINI_MODEL in .env.local if AI Studio shows a different one.
-const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
-const TIMEOUT_MS = 20_000;
-const RATE_LIMIT_RETRY_MS = 2_000;
+// Main model, and a different model used when the main one is overloaded or slow.
+// Measured 2026-10-15 on the free tier: gemini-flash-latest (3.8) often 503s; gemini-3.5-flash
+// was fastest (text ~3 s, audio ~6 s); flash-lite works but was slower under load.
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+const FALLBACK_MODEL =
+  [process.env.GEMINI_FALLBACK_MODEL, "gemini-flash-lite-latest", "gemini-3.5-flash"].find(
+    (m) => m && m !== MODEL,
+  ) as string;
+// Two attempts of 10 s each keep the whole call inside the plan's 20 s limit.
+const ATTEMPT_TIMEOUT_MS = 10_000;
+// Rate limit (429) and temporary overload (500, 503): worth one retry.
+const RETRYABLE_STATUS = new Set([429, 500, 503]);
 
 let client: GoogleGenAI | null = null;
 
@@ -16,41 +24,59 @@ function getClient() {
   return client;
 }
 
+function isRetryable(err: unknown) {
+  if (err instanceof ApiError) return RETRYABLE_STATUS.has(err.status);
+  if (!(err instanceof Error)) return false;
+  // Our own timeout aborts the request; "fetch failed" is a dropped network connection.
+  return err.name === "AbortError" || err.name === "TimeoutError" || err.message === "fetch failed";
+}
+
+function reason(err: unknown) {
+  if (err instanceof ApiError) return `HTTP ${err.status}`;
+  return err instanceof Error ? err.message : String(err);
+}
+
 export interface CallGeminiOptions {
   /** System prompt (rules the model must always follow) */
   system?: string;
   /** Extra parts such as inline audio: { inlineData: { data, mimeType } } */
   parts?: Part[];
+  /** How much the model "thinks" before answering. More = slower. Default LOW (3.8-flash rejects MINIMAL). */
+  thinking?: ThinkingLevel;
 }
+
+export { ThinkingLevel };
 
 /**
  * Sends a prompt to Gemini and returns the reply parsed as JSON matching `schema`.
- * `schema` is a plain JSON Schema object. Retries once on HTTP 429; times out after 20 s.
+ * `schema` is a plain JSON Schema object. If the main model is rate-limited, overloaded or takes
+ * longer than 10 s, retries once on the fallback model.
  */
 export async function callGemini<T>(
   prompt: string,
   schema: object,
   options: CallGeminiOptions = {},
 ): Promise<T> {
-  const request = () =>
+  const request = (model: string) =>
     getClient().models.generateContent({
-      model: MODEL,
+      model,
       contents: [{ role: "user", parts: [{ text: prompt }, ...(options.parts ?? [])] }],
       config: {
         systemInstruction: options.system,
         responseMimeType: "application/json",
         responseJsonSchema: schema,
-        abortSignal: AbortSignal.timeout(TIMEOUT_MS),
+        thinkingConfig: { thinkingLevel: options.thinking ?? ThinkingLevel.LOW },
+        abortSignal: AbortSignal.timeout(ATTEMPT_TIMEOUT_MS),
       },
     });
 
   let response;
   try {
-    response = await request();
+    response = await request(MODEL);
   } catch (err) {
-    if (!(err instanceof ApiError && err.status === 429)) throw err;
-    await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_RETRY_MS));
-    response = await request();
+    if (!isRetryable(err)) throw err;
+    console.warn(`[gemini] ${MODEL} failed (${reason(err)}), retrying on ${FALLBACK_MODEL}`);
+    response = await request(FALLBACK_MODEL);
   }
 
   const text = response.text;

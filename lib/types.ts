@@ -52,6 +52,36 @@ export interface AnalyzeResponse {
   disclaimer: string;
 }
 
+/** POST /api/summary request body: the result she got from /api/analyze */
+export interface SummaryRequest {
+  analysis: AnalyzeResponse;
+}
+
+/** One printable doctor-visit summary in a single language */
+export interface DoctorSummary {
+  /** e.g. "Summary for my doctor's visit" */
+  heading: string;
+  /** One or two sentences: why she is visiting */
+  reasonForVisit: string;
+  symptoms: { name: string; duration: string; severity: string }[];
+  /** e.g. "Gynaecologist — within 2-4 weeks" */
+  recommendedCare: string;
+  questionsForDoctor: string[];
+  /** Not-a-diagnosis note */
+  note: string;
+}
+
+/** POST /api/summary response body. Show `english` and `translated` side by side. */
+export interface SummaryResponse {
+  /** Language of `translated`, e.g. "hi-Latn" */
+  language: string;
+  english: DoctorSummary;
+  /** Same summary in her language; null when she used English */
+  translated: DoctorSummary | null;
+  /** ISO date the summary was made, for the printout */
+  createdAt: string;
+}
+
 /** Returned with a non-2xx status when something goes wrong */
 export interface ApiError {
   error: string;

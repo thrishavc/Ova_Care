@@ -13,10 +13,11 @@ export interface KnowledgeChunk {
   sources?: { title: string; url: string }[];
 }
 
-// $vectorSearch cosine scores run 0-1 (1 = identical). Below this a passage is too unrelated
-// to cite, so an unrelated question gets the safe "see a doctor" answer instead.
-// Tune with Member 3's eval queries.
-const MIN_SCORE = Number(process.env.RETRIEVE_MIN_SCORE ?? 0.7);
+// $vectorSearch cosine scores run 0-1 (1 = identical). Measured with gemini-embedding-2 on our
+// 18 chunks (2026-10-15): relevant questions score 0.82-0.94, unrelated ones ("I feel tired",
+// "headache", "weather today") at most 0.81. Below the cut-off we cite nothing and the user gets
+// the safe "see a doctor" answer. Re-check with Member 3's eval when the knowledge base grows.
+const MIN_SCORE = Number(process.env.RETRIEVE_MIN_SCORE ?? 0.82);
 const CANDIDATES_PER_RESULT = 20;
 
 export interface RetrieveOptions {

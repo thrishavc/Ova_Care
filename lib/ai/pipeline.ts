@@ -3,7 +3,7 @@ import { retrieve } from "@/lib/db/retrieve";
 import { checkRedFlags, type RedFlagMatch } from "@/lib/ai/redFlags";
 import { extractDetails, type Extraction } from "@/lib/ai/extract";
 import { pickSources, writeExplanation } from "@/lib/ai/explain";
-import { findBannedContent } from "@/lib/ai/safety";
+import { findBannedContent, rewriteInstruction } from "@/lib/ai/safety";
 import { findDemoFixture } from "@/lib/ai/demo/cache";
 import {
   DISCLAIMER, SAFE_FALLBACK, SELF_HARM_MESSAGE, URGENT_MESSAGE,
@@ -14,6 +14,9 @@ import {
 // judgement) → C retrieval → D grounded explanation → E safety filter.
 
 const isProd = process.env.NODE_ENV === "production";
+const MAX_REWRITES = 2;
+// A second rewrite takes ~4 s; only try it if we are still well inside the 20 s deadline.
+const SECOND_REWRITE_BEFORE_MS = 12_000;
 
 function logStep(step: string, startedAt: number, extra = "") {
   // Never log the user's words in production.
@@ -132,22 +135,19 @@ export async function analyze(
   logStep("C retrieve", t0, `chunks=${chunks.length}`);
   if (chunks.length === 0) return fallback;
 
-  // Step D + E — grounded explanation, then the safety filter (one regeneration allowed).
+  // Step D + E — grounded explanation, then the safety filter. Each rewrite names the exact
+  // words to avoid; a second rewrite only runs if there is time left within the 20 s deadline.
   let result = await writeExplanation(details, chunks, answerLanguage);
   const textsOf = (r: typeof result) => [r.explanation, ...r.questionsForDoctor];
   let banned = findBannedContent(textsOf(result));
   logStep("D explain", t0, `banned=${banned.length}`);
-  if (banned.length > 0) {
-    result = await writeExplanation(
-      details,
-      chunks,
-      answerLanguage,
-      "IMPORTANT: your previous answer broke the rules (diagnosis words or medicine names). " +
-        "Rewrite it without saying she has any condition, and without naming any medicine, tablet or dose.",
-    );
+  for (let rewrite = 1; banned.length > 0; rewrite++) {
+    if (rewrite > MAX_REWRITES || (rewrite > 1 && Date.now() - t0 > SECOND_REWRITE_BEFORE_MS)) {
+      return fallback;
+    }
+    result = await writeExplanation(details, chunks, answerLanguage, rewriteInstruction(banned));
     banned = findBannedContent(textsOf(result));
-    logStep("E regenerate", t0, `banned=${banned.length}`);
-    if (banned.length > 0) return fallback;
+    logStep(`E rewrite ${rewrite}`, t0, `banned=${banned.length}`);
   }
 
   return {

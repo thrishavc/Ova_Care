@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useSpring, AnimatePresence } from 'motion/react';
-import { Activity, ArrowUp, Sparkles, Calendar } from 'lucide-react';
+import { Activity, ArrowUp, Sparkles } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HeroSection } from './components/HeroSection';
@@ -44,9 +44,8 @@ function AppContent() {
   const [analysisHistoryCount, setAnalysisHistoryCount] = useState<number>(0);
   const [showScrollFloatingCta, setShowScrollFloatingCta] = useState<boolean>(false);
   const [isNearBottom, setIsNearBottom] = useState<boolean>(false);
-  const [latestReportId, setLatestReportId] = useState<string | null>(null);
 
-  const { addReport, updateReportSummary } = useHealthData();
+  const { addReport } = useHealthData();
 
   // Scroll Progress indicator
   const { scrollYProgress, scrollY } = useScroll();
@@ -74,7 +73,7 @@ function AppContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const navigateTo = (tab: any) => {
+  const navigateTo = (tab: string) => {
     setCurrentTab(tab as AppTab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -97,10 +96,7 @@ function AppContent() {
     setCurrentResult(result);
     setAnalysisHistoryCount((prev) => prev + 1);
     // Automatically save actual resulting report into private health reports session
-    const saved = addReport(result);
-    if (saved && saved.id) {
-      setLatestReportId(saved.id);
-    }
+    addReport(result);
     navigateTo('results');
   };
 

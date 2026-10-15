@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Heart, AlertCircle, ExternalLink } from 'lucide-react';
+import { Shield, AlertCircle, ExternalLink } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface FooterProps {
@@ -152,7 +152,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   rel="noopener noreferrer"
                   className="hover:text-[#653B68] transition-colors inline-flex items-center gap-1"
                 >
-                  <span>NHS Women's Health Portal</span>
+                  <span>NHS Women&apos;s Health Portal</span>
                   <ExternalLink className="w-3 h-3 text-[#77717B]" />
                 </a>
               </li>
@@ -163,7 +163,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   rel="noopener noreferrer"
                   className="hover:text-[#653B68] transition-colors inline-flex items-center gap-1"
                 >
-                  <span>Office on Women's Health (HHS)</span>
+                  <span>Office on Women&apos;s Health (HHS)</span>
                   <ExternalLink className="w-3 h-3 text-[#77717B]" />
                 </a>
               </li>

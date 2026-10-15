@@ -1,4 +1,4 @@
-// OWNER: Member 3 (drafted by Member 1). Finds the trusted source passages for an answer.
+// Finds the trusted source passages for an answer.
 // /api/analyze depends on this signature — keep it.
 import { getDb, COLLECTIONS, VECTOR_INDEX } from "@/lib/db/client";
 import { embed } from "@/lib/ai/embeddings";
@@ -16,7 +16,7 @@ export interface KnowledgeChunk {
 // $vectorSearch cosine scores run 0-1 (1 = identical). Measured with gemini-embedding-2 on our
 // 18 chunks (2026-10-15): relevant questions score 0.82-0.94, unrelated ones ("I feel tired",
 // "headache", "weather today") at most 0.81. Below the cut-off we cite nothing and the user gets
-// the safe "see a doctor" answer. Re-check with Member 3's eval when the knowledge base grows.
+// the safe "see a doctor" answer. Re-check when the knowledge base grows.
 const MIN_SCORE = Number(process.env.RETRIEVE_MIN_SCORE ?? 0.82);
 const CANDIDATES_PER_RESULT = 20;
 

@@ -1,17 +1,14 @@
 import React from 'react';
 import {
   AlertTriangle,
-  Calendar,
   CheckCircle2,
   FileText,
   Edit3,
-  Home,
   ExternalLink,
   ShieldAlert,
   ArrowRight,
   Info,
   Clock,
-  Sparkles,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SymptomAnalysisResult } from '../types/health';
@@ -34,7 +31,6 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
 }) => {
   const { t } = useLanguage();
   const isUrgent = result.urgency === 'urgent';
-  const isPrompt = result.urgency === 'prompt';
 
   const urgencyConfig = {
     urgent: {

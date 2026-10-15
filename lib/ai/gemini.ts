@@ -1,9 +1,9 @@
 import { ApiError, GoogleGenAI, ThinkingLevel, type Part } from "@google/genai";
 
 // Main model, and a different model used when the main one is overloaded or slow.
-// Measured 2026-10-15 on the free tier: gemini-flash-latest (3.8) often 503s; gemini-3.5-flash
-// was fastest (text ~3 s, audio ~6 s); flash-lite works but was slower under load.
-const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+// On the free tier the larger flash models are often overloaded (503) or out of daily quota (429);
+// gemini-3.1-flash-lite stayed fast and available, so it is the default.
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
 const FALLBACK_MODEL =
   [process.env.GEMINI_FALLBACK_MODEL, "gemini-flash-lite-latest", "gemini-3.5-flash"].find(
     (m) => m && m !== MODEL,

@@ -1,4 +1,4 @@
-// Frontend adapter: Member 2's mic button uploads the recording (multipart form) and shows
+// Frontend adapter: the mic button uploads the recording (multipart form) and shows
 // "We heard: …" for the user to check before analysis. The transcript then goes through
 // /api/analyze-symptoms, so red flags are still checked first.
 import { callGemini } from "@/lib/ai/gemini";

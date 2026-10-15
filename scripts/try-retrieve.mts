@@ -1,4 +1,4 @@
-// OWNER: Member 3. Quick manual check of retrieve():
+// Quick manual check of retrieve():
 //   npm run retrieve:test                       runs the built-in sample queries
 //   npm run retrieve:test -- "my search words"  runs your own query
 

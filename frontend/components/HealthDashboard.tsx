@@ -2,17 +2,13 @@ import React from 'react';
 import {
   Activity,
   BookOpen,
-  FileText,
   Shield,
   Sparkles,
-  HeartPulse,
   Calendar,
-  History,
   Clock,
   ArrowRight,
   Plus,
   Droplet,
-  CheckCircle2,
 } from 'lucide-react';
 import { EDUCATIONAL_ARTICLES, getLocalizedArticle } from '../data/educationalTopics';
 import { EducationalArticle } from '../types/health';

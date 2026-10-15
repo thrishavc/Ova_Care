@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, BookOpen, Clock, ArrowRight, ExternalLink, AlertTriangle, ShieldCheck, X, HeartPulse } from 'lucide-react';
+import { Search, Clock, ArrowRight, ExternalLink, AlertTriangle, X } from 'lucide-react';
 import { EDUCATIONAL_ARTICLES, getLocalizedArticle } from '../data/educationalTopics';
 import { EducationalArticle } from '../types/health';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -106,6 +106,8 @@ export const EducationalLibrary: React.FC<EducationalLibraryProps> = ({
             {/* Right Side Editorial Desk Image */}
             <div className="lg:col-span-4 hidden lg:block">
               <div className="rounded-2xl overflow-hidden border border-[#EDE5F3] shadow-xs">
+                {/* Decorative static image from /public; a plain <img> keeps the original layout. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/images/educational-cover.jpg"
                   alt="Calming wellness consultation desk"
@@ -178,7 +180,7 @@ export const EducationalLibrary: React.FC<EducationalLibraryProps> = ({
 
         {filteredArticles.length === 0 && (
           <div className="p-12 text-center bg-white rounded-3xl border border-[#EDE5F3] space-y-3">
-            <p className="text-sm font-medium text-[#29252D]">{t('library.noResults')} "{searchQuery}"</p>
+            <p className="text-sm font-medium text-[#29252D]">{t('library.noResults')} &quot;{searchQuery}&quot;</p>
             <button
               onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
               className="text-xs font-semibold text-[#653B68] hover:underline cursor-pointer"

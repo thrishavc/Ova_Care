@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertOctagon, PhoneCall, ArrowLeft, ShieldAlert, ExternalLink, HeartCrack } from 'lucide-react';
+import { AlertOctagon, ArrowLeft, ExternalLink } from 'lucide-react';
 import { SymptomAnalysisResult } from '../types/health';
 
 interface UrgentCareScreenProps {
@@ -94,7 +94,7 @@ export const UrgentCareScreen: React.FC<UrgentCareScreenProps> = ({
               <div>
                 <strong className="text-sm font-semibold text-red-950">Tell the triage nurse immediately upon arrival:</strong>
                 <p className="mt-0.5 p-3 rounded-xl bg-white border border-red-200 font-mono text-[11px] text-red-950">
-                  "{result?.originalInput || 'I have sudden, severe lower abdominal/pelvic pain and feel faint/dizzy.'}"
+                  &quot;{result?.originalInput || 'I have sudden, severe lower abdominal/pelvic pain and feel faint/dizzy.'}&quot;
                 </p>
               </div>
             </div>
@@ -218,7 +218,7 @@ export const UrgentCareScreen: React.FC<UrgentCareScreenProps> = ({
         {/* Essential Safety Boundaries Statement */}
         <div className="p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-700 leading-relaxed text-center">
           <strong>Important Clinical Boundary: </strong>
-          This application cannot guarantee any individual's safety and does not dispatch emergency services. Please contact official emergency dispatchers or go directly to a hospital.
+          This application cannot guarantee any individual&apos;s safety and does not dispatch emergency services. Please contact official emergency dispatchers or go directly to a hospital.
         </div>
 
       </div>

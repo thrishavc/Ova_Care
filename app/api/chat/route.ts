@@ -1,4 +1,4 @@
-// Frontend adapter: Member 2's chat screen. Each message goes through the same safety pipeline
+// Frontend adapter: the chat screen. Each message goes through the same safety pipeline
 // as /api/analyze, so the chat never answers outside our rules or sources.
 import { analyzeWithDeadline, toFrontendUrgency, toVerifiedSources } from "@/lib/ai/frontendAdapter";
 

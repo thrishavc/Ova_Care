@@ -70,7 +70,7 @@ function generateRealisticMockResponse(
     lower.includes('teevra') ||
     lower.includes('asadhya')
   ) {
-    let reply = `⚠️ **Important Safety Notice**: The symptoms you described (severe sudden pain, fainting, or sudden intense bleeding) may indicate a condition requiring immediate medical evaluation, such as an ectopic pregnancy, ruptured ovarian cyst, or severe pelvic infection.\n\n` +
+    const reply = `⚠️ **Important Safety Notice**: The symptoms you described (severe sudden pain, fainting, or sudden intense bleeding) may indicate a condition requiring immediate medical evaluation, such as an ectopic pregnancy, ruptured ovarian cyst, or severe pelvic infection.\n\n` +
       `**Recommended Next Steps:**\n` +
       `1. Please seek in-person care at the nearest Emergency Department or Urgent Care facility immediately.\n` +
       `2. Do not attempt strenuous physical activity or drive yourself if you are feeling dizzy.\n` +
@@ -106,7 +106,7 @@ function generateRealisticMockResponse(
     lower.includes('mutu') ||
     lower.includes('period')
   ) {
-    let reply = `Thank you for sharing your experience. Irregular menstrual cycles can occur for several reasons, and tracking their pattern is a valuable first step in understanding your body.\n\n` +
+    const reply = `Thank you for sharing your experience. Irregular menstrual cycles can occur for several reasons, and tracking their pattern is a valuable first step in understanding your body.\n\n` +
       `**Common physiological factors may include:**\n` +
       `• **Hormonal Fluctuations**: Imbalances in LH, FSH, estrogen, and progesterone can affect regular ovulation.\n` +
       `• **Polycystic Ovary Syndrome (PCOS)**: Often associated with infrequent periods, mild pelvic tenderness, hormonal acne, or elevated androgen markers.\n` +
@@ -145,7 +145,7 @@ function generateRealisticMockResponse(
     lower.includes('dard') ||
     lower.includes('novu')
   ) {
-    let reply = `Menstrual discomfort is very common, but pain should never be dismissed or prevent you from carrying on with daily life.\n\n` +
+    const reply = `Menstrual discomfort is very common, but pain should never be dismissed or prevent you from carrying on with daily life.\n\n` +
       `**Understanding the physiology:**\n` +
       `• **Primary Dysmenorrhea**: Often caused by uterine contractions stimulated by prostaglandins during the first 24–48 hours of menstruation.\n` +
       `• **Secondary Dysmenorrhea**: When pelvic pain begins earlier, lasts longer, or radiates into the lower back and thighs, conditions such as endometriosis or adenomyosis may be considered by a specialist.\n\n` +

@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 import {
   History,
-  Calendar,
   Edit2,
   Trash2,
   Plus,
   ArrowRight,
   AlertCircle,
   Clock,
-  Droplet,
   Info,
   Check,
   X,
-  FileText,
 } from 'lucide-react';
 import { useHealthData } from '../context/HealthDataContext';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -28,7 +25,7 @@ export const CycleHistory: React.FC<CycleHistoryProps> = ({
   onNavigateToDashboard,
 }) => {
   const { t } = useLanguage();
-  const { periods, cycles, stats, updatePeriod, deletePeriod, addPeriod } = useHealthData();
+  const { periods, cycles, stats, updatePeriod, deletePeriod } = useHealthData();
 
   // Edit / Delete modal states
   const [editingEntry, setEditingEntry] = useState<PeriodEntry | null>(null);

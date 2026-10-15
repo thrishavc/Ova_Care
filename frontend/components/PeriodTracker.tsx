@@ -4,11 +4,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Edit2,
   Trash2,
   AlertCircle,
-  Clock,
-  Sparkles,
   Shield,
   Info,
   Check,
@@ -27,7 +24,6 @@ interface PeriodTrackerProps {
 
 export const PeriodTracker: React.FC<PeriodTrackerProps> = ({
   onNavigateToHistory,
-  onNavigateToDashboard,
 }) => {
   const { t, language } = useLanguage();
   const { periods, stats, addPeriod, updatePeriod, deletePeriod, storageMode } = useHealthData();

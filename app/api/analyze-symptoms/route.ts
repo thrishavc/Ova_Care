@@ -1,4 +1,4 @@
-// Frontend adapter: Member 2's symptom screen posts { symptoms, language } here.
+// Frontend adapter: the symptom screen posts { symptoms, language } here.
 // Runs our full pipeline (red flags → extraction → cited sources → safety filter).
 import { analyzeWithDeadline, toSymptomAnalysisResult } from "@/lib/ai/frontendAdapter";
 

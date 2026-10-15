@@ -41,7 +41,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({
               {t('hero.pillarLanguageTitle')}
             </h3>
             <p className="text-xs text-[#77717B] leading-relaxed">
-              Medical vocabulary should never be a gatekeeper to understanding one's own body. Ova Care welcomes everyday descriptions in English, Hindi, and Kannada without requiring intimidating medical terms.
+              Medical vocabulary should never be a gatekeeper to understanding one&apos;s own body. Ova Care welcomes everyday descriptions in English, Hindi, and Kannada without requiring intimidating medical terms.
             </p>
           </div>
 

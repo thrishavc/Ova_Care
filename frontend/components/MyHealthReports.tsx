@@ -3,20 +3,13 @@ import {
   FileText,
   Printer,
   Calendar,
-  AlertCircle,
-  HelpCircle,
-  Stethoscope,
-  Sparkles,
   ArrowRight,
-  ExternalLink,
   Trash2,
   Eye,
   X,
   Languages,
   Shield,
   Plus,
-  Clock,
-  Download,
 } from 'lucide-react';
 import { useHealthData } from '../context/HealthDataContext';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -198,7 +191,7 @@ export const MyHealthReports: React.FC<MyHealthReportsProps> = ({
                           {analysis.understoodSymptoms?.[0] || report.originalInput || 'Health Assessment Report'}
                         </h3>
                         <p className="text-xs text-[#77717B] mt-1 line-clamp-2 leading-relaxed">
-                          "{report.originalInput}"
+                          &quot;{report.originalInput}&quot;
                         </p>
                       </div>
 
@@ -340,7 +333,7 @@ export const MyHealthReports: React.FC<MyHealthReportsProps> = ({
                     1. {t('reports.headingSymptomsDescribed')}
                   </h4>
                   <p className="text-xs sm:text-sm text-gray-800 bg-[#FFFDF9] p-3.5 rounded-xl border border-gray-200 leading-relaxed font-sans">
-                    "{selectedReport.originalInput}"
+                    &quot;{selectedReport.originalInput}&quot;
                   </p>
                 </div>
               )}

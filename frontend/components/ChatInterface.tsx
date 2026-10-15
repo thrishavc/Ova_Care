@@ -1,31 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Send,
-  Sparkles,
   RotateCcw,
   RefreshCw,
   Copy,
   Check,
   AlertCircle,
   ShieldCheck,
-  Languages,
   Mic,
   MicOff,
-  ChevronDown,
   ArrowDown,
   Heart,
   BookOpen,
   FileText,
-  CornerDownLeft,
-  MessageSquare,
   Bot,
   User,
-  Info
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { sendChatMessage, ChatRequest, ChatResponse, ChatHistoryEntry } from '../services/chatApi';
 import { useLanguage } from '../i18n/LanguageContext';
 import { GlobalLanguageSelector } from './GlobalLanguageSelector';
+import { getSpeechRecognition, type SpeechRecognitionEventLike, type SpeechRecognitionErrorEventLike } from '../types/speech';
+
+/** Unique id for a chat message (called from event handlers). */
+const makeMessageId = (prefix: string) => `${prefix}-${Date.now()}`;
 
 interface MessageItem {
   id: string;
@@ -49,7 +47,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onNavigateToSummary,
   onNavigateToLibrary,
 }) => {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, t } = useLanguage();
   const [conversationId, setConversationId] = useState<string>(() => `conv-${Date.now()}`);
   const [inputText, setInputText] = useState<string>(initialPrompt || '');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -75,20 +73,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     },
   ]);
 
-  // When global language changes and only welcome message exists, update welcome message
-  useEffect(() => {
-    setMessages((prev) => {
-      if (prev.length === 1 && prev[0].id === 'welcome-msg') {
-        return [
-          {
-            ...prev[0],
-            text: t('chat.welcome'),
-          },
-        ];
-      }
-      return prev;
-    });
-  }, [language]);
+  // The first welcome message always shows in the current language.
+  const displayText = (message: MessageItem) =>
+    message.id === 'welcome-msg' ? t('chat.welcome') : message.text;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatScrollContainerRef = useRef<HTMLDivElement>(null);
@@ -120,12 +107,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   }, [inputText]);
 
-  // Pre-fill initial prompt if supplied
-  useEffect(() => {
+  // Pre-fill the input when a new initial prompt is passed in
+  const [prevInitialPrompt, setPrevInitialPrompt] = useState(initialPrompt);
+  if (initialPrompt !== prevInitialPrompt) {
+    setPrevInitialPrompt(initialPrompt);
     if (initialPrompt && initialPrompt.trim() !== '') {
       setInputText(initialPrompt);
     }
-  }, [initialPrompt]);
+  }
 
   // Send message handler with duplicate protection and validation
   const handleSendMessage = async (textToSend?: string) => {
@@ -142,7 +131,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
 
     const userMessage: MessageItem = {
-      id: `user-${Date.now()}`,
+      id: makeMessageId('user'),
       sender: 'user',
       text: trimmed,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -175,7 +164,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       const response: ChatResponse = await sendChatMessage(requestPayload);
 
       const aiMessage: MessageItem = {
-        id: `ai-${Date.now()}`,
+        id: makeMessageId('ai'),
         sender: 'assistant',
         text: response.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -185,10 +174,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-    } catch (err: any) {
+    } catch {
       setLastFailedMessage(trimmed);
       const errorMessage: MessageItem = {
-        id: `err-${Date.now()}`,
+        id: makeMessageId('err'),
         sender: 'assistant',
         text: "I couldn't connect with the health service just now. Please check your connection or tap **Retry** below.",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -248,7 +237,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Speech to text toggle for Kannada, Hindi, and English
   const handleSpeechToggle = () => {
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      getSpeechRecognition();
 
     const sampleVoices: Record<string, string> = {
       kn: 'ನನ್ನ ಮುಟ್ಟು ಕಳೆದ ೨ ತಿಂಗಳುಗಳಿಂದ ಸರಿ ಇಲ್ಲ ಮತ್ತು ಹೊಟ್ಟೆಯ ಕೆಳಭಾಗದಲ್ಲಿ ನೋವು ಬರುತ್ತಿದೆ.',
@@ -299,7 +288,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         setSpeechNotice(listeningLabels[language] || listeningLabels.en);
       };
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEventLike) => {
         let transcript = '';
         for (let i = 0; i < event.results.length; ++i) {
           transcript += event.results[i][0].transcript;
@@ -313,7 +302,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }
       };
 
-      recognition.onerror = (e: any) => {
+      recognition.onerror = (e: SpeechRecognitionErrorEventLike) => {
         console.warn('SpeechRecognition error in chat:', e?.error);
         setIsListening(false);
         const fallbackText = sampleVoices[language] || sampleVoices.en;
@@ -521,7 +510,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       {isUser ? (
                         <p className="whitespace-pre-wrap">{message.text}</p>
                       ) : (
-                        renderFormattedText(message.text)
+                        renderFormattedText(displayText(message))
                       )}
                     </div>
 

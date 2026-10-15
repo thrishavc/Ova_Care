@@ -1,4 +1,4 @@
-// OWNER: Member 3 (drafted by Member 1). One shared MongoDB connection, reused across requests.
+// One shared MongoDB connection, reused across requests.
 import { MongoClient, type Db } from "mongodb";
 
 const DB_NAME = process.env.MONGODB_DB || "ovacare";

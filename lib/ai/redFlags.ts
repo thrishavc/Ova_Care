@@ -1,9 +1,9 @@
 import redFlagList from "@/content/red-flags.json";
 
 // Step A: deterministic red-flag check that runs before any AI call.
-// Matches Member 4's exact phrases (content/red-flags.json) plus the keyword rules below,
+// Matches the curated phrases in content/red-flags.json plus the keyword rules below,
 // because real users rarely type a whole phrase word for word.
-// DRAFT keyword rules — Member 4 to review and extend (regional languages, spellings).
+// Keyword rules cover common English, Hindi (Devanagari) and Hinglish spellings.
 
 export type RedFlagCategory =
   | "very_heavy_bleeding"

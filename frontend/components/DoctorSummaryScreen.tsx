@@ -16,6 +16,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { fetchConsultationSummary } from '../services/voiceSummaryApi';
 
 import { useHealthData } from '../context/HealthDataContext';
+import { errorMessage } from '../types/speech';
 
 interface DoctorSummaryScreenProps {
   result: SymptomAnalysisResult;
@@ -78,7 +79,8 @@ export const DoctorSummaryScreen: React.FC<DoctorSummaryScreenProps> = ({
             language,
           });
         }
-      } catch (err: any) {
+      } catch (caught) {
+        const err = caught instanceof Error ? caught : new Error(errorMessage(caught));
         if (err.name === 'AbortError') {
           return;
         }
@@ -91,10 +93,15 @@ export const DoctorSummaryScreen: React.FC<DoctorSummaryScreenProps> = ({
         setIsLoadingSummary(false);
       }
     },
+    // reports/updateReportSummary are read at call time; adding them would refetch on every save.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [result, language, summaryData, t]
   );
 
+  // Fetch the summary when the result or language changes. loadSummary is left out of the
+  // dependencies on purpose: it changes after every fetch and would loop.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSummary();
 
     return () => {
@@ -102,6 +109,7 @@ export const DoctorSummaryScreen: React.FC<DoctorSummaryScreenProps> = ({
         abortControllerRef.current.abort();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result.id, language]);
 
   const handlePrint = () => {
@@ -263,10 +271,10 @@ export const DoctorSummaryScreen: React.FC<DoctorSummaryScreenProps> = ({
           {/* Section 1: Patient's Original Symptom Statement */}
           <div className="space-y-2 pt-2">
             <h2 className="text-xs font-bold uppercase tracking-wider text-[#653B68] print:text-black">
-              1. Patient's Reported Description (In Their Own Words)
+              1. Patient&apos;s Reported Description (In Their Own Words)
             </h2>
             <div className="p-4 rounded-xl bg-[#FFFDF9] border border-[#EDE5F3] text-sm text-[#29252D] font-normal leading-relaxed italic print:bg-gray-50 print:border-gray-300">
-              "{result.originalInput}"
+              &quot;{result.originalInput}&quot;
             </div>
             <p className="text-[11px] text-[#77717B]">
               Input language detected: {result.detectedLanguage}
@@ -366,7 +374,7 @@ export const DoctorSummaryScreen: React.FC<DoctorSummaryScreenProps> = ({
 
         {/* Bottom Print Hint (No Print) */}
         <div className="no-print p-4 rounded-xl bg-[#EDE5F3]/40 border border-[#EDE5F3] text-center text-xs text-[#77717B]">
-          Tip: Click <strong className="text-[#653B68]">"Print / Save as PDF"</strong> to create a
+          Tip: Click <strong className="text-[#653B68]">&quot;Print / Save as PDF&quot;</strong> to create a
           physical sheet for your doctor appointment or save directly to your mobile phone.
         </div>
       </div>

@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Mic,
-  MicOff,
   Sparkles,
   Send,
   AlertCircle,
   Info,
-  CheckCircle2,
   RotateCcw,
   Languages,
   Square,
@@ -18,6 +16,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { SymptomAnalysisResult } from '../contract';
+import { errorMessage, getSpeechRecognition, type SpeechRecognitionLike, type SpeechRecognitionEventLike, type SpeechRecognitionErrorEventLike } from '../types/speech';
 import { useLanguage } from '../i18n/LanguageContext';
 import { SupportedLanguage } from '../i18n/translations';
 import { transcribeAudio } from '../services/voiceSummaryApi';
@@ -71,15 +70,16 @@ export const SymptomAssistant: React.FC<SymptomAssistantProps> = ({
   const [loadingStep, setLoadingStep] = useState(0);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [hasApiKey, setHasApiKey] = useState<boolean | null>(false);
 
   // Dedicated speech/voice language (supports Kannada, Hindi, English)
   const [voiceLanguage, setVoiceLanguage] = useState<SupportedLanguage>(language);
 
-  // Synchronize voiceLanguage whenever global language changes
-  useEffect(() => {
+  // Follow the global language whenever it changes
+  const [prevLanguage, setPrevLanguage] = useState(language);
+  if (language !== prevLanguage) {
+    setPrevLanguage(language);
     setVoiceLanguage(language);
-  }, [language]);
+  }
 
   // Voice recording state
   const [recordingStatus, setRecordingStatus] = useState<VoiceRecordingStatus>('idle');
@@ -94,7 +94,7 @@ export const SymptomAssistant: React.FC<SymptomAssistantProps> = ({
   // References for MediaStream, MediaRecorder, SpeechRecognition, Audio Chunks, and Timer
   const streamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const speechRecognitionRef = useRef<any>(null);
+  const speechRecognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<number | null>(null);
   const lastRecordedBlobRef = useRef<{ blob: Blob; mimeType: string } | null>(null);
@@ -199,11 +199,6 @@ export const SymptomAssistant: React.FC<SymptomAssistantProps> = ({
 
   // Ensure microphone tracks and background jobs are cleaned up on unmount
   useEffect(() => {
-    fetch('/api/health-check')
-      .then((res) => res.json())
-      .then((data) => setHasApiKey(data.hasApiKey))
-      .catch(() => setHasApiKey(false));
-
     return () => {
       clearTimer();
       stopMicrophoneTracks();
@@ -279,7 +274,8 @@ export const SymptomAssistant: React.FC<SymptomAssistantProps> = ({
         setRecordingStatus('review');
         setShowCombineOptions(symptoms.trim().length > 0 && symptoms.trim() !== transcript);
       }
-    } catch (err: any) {
+    } catch (caught) {
+      const err = caught instanceof Error ? caught : new Error(errorMessage(caught));
       if (err.name === 'AbortError') return;
 
       // If network endpoint failed but live browser recognition captured speech, preserve the user's speech
@@ -329,7 +325,7 @@ export const SymptomAssistant: React.FC<SymptomAssistantProps> = ({
       typeof navigator.mediaDevices.getUserMedia === 'function';
     const SpeechRecognition =
       typeof window !== 'undefined'
-        ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        ? getSpeechRecognition()
         : null;
 
     if (!hasMediaDevices && !SpeechRecognition) {
@@ -361,7 +357,7 @@ export const SymptomAssistant: React.FC<SymptomAssistantProps> = ({
           recognizer.lang = 'en-IN'; // English (India) / en-US
         }
 
-        recognizer.onresult = (event: any) => {
+        recognizer.onresult = (event: SpeechRecognitionEventLike) => {
           let fullTranscript = '';
           let interimTranscript = '';
           for (let i = 0; i < event.results.length; ++i) {
@@ -378,7 +374,7 @@ export const SymptomAssistant: React.FC<SymptomAssistantProps> = ({
           }
         };
 
-        recognizer.onerror = (e: any) => {
+        recognizer.onerror = (e: SpeechRecognitionErrorEventLike) => {
           console.warn('SpeechRecognition notice:', e?.error);
         };
 
@@ -446,7 +442,8 @@ export const SymptomAssistant: React.FC<SymptomAssistantProps> = ({
         // Start MediaRecorder in chunks
         recorder.start(250);
         mediaRecorderStarted = true;
-      } catch (mediaErr: any) {
+      } catch (caughtMedia) {
+        const mediaErr = caughtMedia instanceof Error ? caughtMedia : new Error(errorMessage(caughtMedia));
         console.warn('getUserMedia warning:', mediaErr);
         // If SpeechRecognition already started, do NOT fail the session!
         if (!speechRecognizerStarted) {
@@ -662,7 +659,8 @@ export const SymptomAssistant: React.FC<SymptomAssistantProps> = ({
 
       setIsLoading(false);
       onAnalysisComplete(data.data);
-    } catch (err: any) {
+    } catch (caught) {
+      const err = caught instanceof Error ? caught : new Error(errorMessage(caught));
       clearInterval(stepTimer);
       setIsLoading(false);
       setServerError(
@@ -961,7 +959,7 @@ export const SymptomAssistant: React.FC<SymptomAssistantProps> = ({
                       Hearing live in {languageNames[voiceLanguage].label} ({languageNames[voiceLanguage].codeTag}):
                     </span>
                     <p className="font-medium italic text-sm text-[#29252D] leading-relaxed">
-                      "{interimLiveSpeech}"
+                      &quot;{interimLiveSpeech}&quot;
                     </p>
                   </div>
                 ) : (

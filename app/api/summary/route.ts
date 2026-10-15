@@ -1,5 +1,6 @@
 import type { AnalyzeResponse, ApiError, SummaryRequest } from "@/lib/types";
 import { makeSummary } from "@/lib/ai/summary";
+import { findDemoSummary } from "@/lib/ai/demo/cache";
 
 const MAX_BODY_CHARS = 30_000;
 
@@ -33,6 +34,9 @@ export async function POST(request: Request) {
   if (!isAnalysis(body.analysis)) {
     return badRequest("Please send the result from /api/analyze as { analysis }.");
   }
+
+  const demo = findDemoSummary(body.analysis);
+  if (demo) return Response.json({ ...demo, createdAt: new Date().toISOString() });
 
   // makeSummary never throws: if Gemini fails it returns a basic English summary.
   return Response.json(await makeSummary(body.analysis));

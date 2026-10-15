@@ -1,11 +1,11 @@
-// OWNER: Member 3 (drafted by Member 1). Loads Member 4's knowledge files into MongoDB.
+// Loads the knowledge base (content/knowledge/*.md) into MongoDB Atlas with vector embeddings.
 //
 //   npm run ingest                 embed + load content/knowledge/*.md, create the vector index
 //   npm run ingest -- --dry-run    only show how the files would be chunked (no API, no DB)
 //   options: --dir=<folder>  --collection=<name>
 //
 // Two file formats are accepted:
-//  1. Member 4's format: "# Title", "## Section" paragraphs, and a "## Sources" list at the end
+//  1. Plain format: "# Title", "## Section" paragraphs, and a "## Sources" list at the end
 //     ("- Name: https://…" or "1. Name" followed by the link on the next line). Topic comes from
 //     TOPIC_BY_FILE below, language defaults to en.
 //  2. A header block (overrides the above):

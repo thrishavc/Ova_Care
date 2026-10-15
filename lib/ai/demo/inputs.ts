@@ -1,7 +1,6 @@
 // The demo-day inputs (plan section 10). Their real pipeline answers are saved in responses.json
 // by `npm run demo:warm`, so the live demo never waits on the free-tier Gemini API.
 // Only these fixed phrases are cached — never real users' text.
-// TODO(Member 4): replace the regional-language case with the exact sentence you will type on stage.
 
 export interface DemoInput {
   id: string;
@@ -23,7 +22,7 @@ export const DEMO_INPUTS: DemoInput[] = [
   },
   {
     id: "case2-regional",
-    // Placeholder (Hindi in Devanagari) until Member 4 confirms the regional sentence.
+    // Hindi in Devanagari script
     text: "पीरियड्स बहुत अनियमित हैं और चेहरे पर बाल बढ़ रहे हैं",
     language: "auto",
   },

@@ -1,5 +1,5 @@
 // Generates lib/ai/demo/responses.json: real pipeline answers for the demo inputs.
-// OWNER: Member 1. Run after the knowledge base and retrieve() are live, and again after any
+// Run after the knowledge base and retrieve() are live, and again after any
 // prompt or knowledge change:   npm run demo:warm
 // Flags: --only=<id>  regenerate one input;  --allow-no-sources  save answers without sources.
 

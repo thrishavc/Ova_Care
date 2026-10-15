@@ -12,7 +12,6 @@ export const InteractiveTiltCard: React.FC<InteractiveTiltCardProps> = ({
   children,
   className = '',
   onClick,
-  gradient,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);

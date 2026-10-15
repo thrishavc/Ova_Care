@@ -387,7 +387,7 @@ export const EDUCATIONAL_ARTICLES: EducationalArticle[] = [
     lifestyleAndCare: [
       'Engage in regular weight-bearing exercise (resistance training, walking) to preserve bone mineral density',
       'Dress in breathable layers and keep sleeping spaces cool with moisture-wicking fabrics',
-      'Ensure adequate daily dietary calcium (1200 mg) and vitamin D intake under clinician guidance'
+      'Ask your doctor how much calcium and vitamin D is right for you, and include calcium-rich foods in your diet'
     ],
     verifiedSources: [
       {

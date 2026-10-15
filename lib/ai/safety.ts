@@ -1,5 +1,5 @@
 // Step E: last check on everything the model wrote before it reaches the user.
-// Blocks diagnosis language, medicine names and doses. Member 3's eval harness uses the same list.
+// Blocks diagnosis language, medicine names and doses. Evaluation should check the same list.
 
 interface BannedRule {
   pattern: RegExp;

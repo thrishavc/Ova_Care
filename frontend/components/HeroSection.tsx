@@ -216,6 +216,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             >
               <div className="aspect-[4/3] w-full overflow-hidden bg-[#F8E5EA]/30 relative">
                 {imageLoaded ? (
+                  // Decorative static image from /public; a plain <img> keeps the original layout.
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src="/images/hero.jpg"
                     alt="Ova Care women wellness illustration"
@@ -226,7 +228,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-tr from-[#F8E5EA] to-[#EDE5F3] p-8 text-center">
                     <Heart className="w-16 h-16 text-[#D98CA3] mb-4 animate-float-gentle" />
                     <span className="font-serif text-2xl text-[#653B68]">Ova Care</span>
-                    <span className="text-xs text-[#77717B] mt-1">Holistic Women's Health & Symptom Guidance</span>
+                    <span className="text-xs text-[#77717B] mt-1">Holistic Women&apos;s Health & Symptom Guidance</span>
                   </div>
                 )}
               </div>

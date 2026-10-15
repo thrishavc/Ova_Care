@@ -45,3 +45,9 @@ next-env.d.ts
 *.env
 *credentials*
 !.env.example
+
+# regenerated locally by `next dev`
+AGENTS.md
+
+# archives dropped into the folder
+*.zip

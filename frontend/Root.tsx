@@ -1,6 +1,6 @@
 "use client";
 
-// Member 2's app (exported from AI Studio), mounted inside Next.js. Was src/main.tsx.
+// Entry point of the single-page frontend, mounted by app/page.tsx.
 import App from "./App";
 import { LanguageProvider } from "./i18n/LanguageContext";
 

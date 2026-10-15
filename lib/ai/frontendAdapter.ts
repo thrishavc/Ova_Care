@@ -1,4 +1,4 @@
-// Converts between our API contract (lib/types.ts) and the shapes Member 2's frontend expects
+// Converts between our API contract (lib/types.ts) and the shapes the frontend expects
 // (frontend/contract.ts). The frontend's own routes (/api/analyze-symptoms, /api/chat, …) call
 // these so every answer still goes through our pipeline: red flags first, cited sources,
 // banned-word filter.

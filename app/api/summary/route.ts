@@ -23,7 +23,7 @@ function isAnalysis(a: unknown): a is AnalyzeResponse {
   );
 }
 
-/** Member 2's frontend sends its own SymptomAnalysisResult shape (see frontend/contract.ts). */
+/** The frontend sends its own SymptomAnalysisResult shape (see frontend/contract.ts). */
 function isFrontendAnalysis(a: unknown): a is SymptomAnalysisResult & { ova?: AnalyzeResponse } {
   if (!a || typeof a !== "object") return false;
   const x = a as Partial<SymptomAnalysisResult>;

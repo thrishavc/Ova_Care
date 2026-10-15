@@ -10,7 +10,6 @@ import {
   Info,
   Sparkles,
   Home,
-  MessageSquare,
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { GlobalLanguageSelector } from './GlobalLanguageSelector';

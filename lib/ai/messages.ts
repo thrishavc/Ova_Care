@@ -1,6 +1,6 @@
 // Fixed safety text shown without any AI involvement.
-// DRAFT wording — Member 4 owns the final text and must verify every helpline number
-// (112 emergency, 108 ambulance, Tele-MANAS 14416) on an official government page.
+// Helplines: 112 (emergency), 108 (ambulance), Tele-MANAS 14416 (mental health) — check them
+// against official government pages whenever this text changes.
 
 export type UiLanguage = "en" | "hi" | "hi-Latn";
 

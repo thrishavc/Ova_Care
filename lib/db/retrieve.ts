@@ -9,6 +9,8 @@ export interface KnowledgeChunk {
   language: string;
   sourceTitle: string;
   sourceUrl: string;
+  /** Every source listed for the passage's file (sourceTitle/sourceUrl is the first). */
+  sources?: { title: string; url: string }[];
 }
 
 // $vectorSearch cosine scores run 0-1 (1 = identical). Below this a passage is too unrelated
@@ -57,6 +59,7 @@ export async function retrieve(
             language: 1,
             sourceTitle: 1,
             sourceUrl: 1,
+            sources: 1,
             score: { $meta: "vectorSearchScore" },
           },
         },
@@ -65,8 +68,8 @@ export async function retrieve(
 
     return results
       .filter((r) => r.score >= MIN_SCORE)
-      .map(({ text, topic, language, sourceTitle, sourceUrl }) => ({
-        text, topic, language, sourceTitle, sourceUrl,
+      .map(({ text, topic, language, sourceTitle, sourceUrl, sources }) => ({
+        text, topic, language, sourceTitle, sourceUrl, sources,
       }));
   } catch (err) {
     console.error("[retrieve] failed, answering without sources:", err instanceof Error ? err.message : err);

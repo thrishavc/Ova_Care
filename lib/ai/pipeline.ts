@@ -4,6 +4,7 @@ import { checkRedFlags, type RedFlagMatch } from "@/lib/ai/redFlags";
 import { extractDetails, type Extraction } from "@/lib/ai/extract";
 import { pickSources, writeExplanation } from "@/lib/ai/explain";
 import { findBannedContent } from "@/lib/ai/safety";
+import { findDemoFixture } from "@/lib/ai/demo/cache";
 import {
   DISCLAIMER, SAFE_FALLBACK, SELF_HARM_MESSAGE, URGENT_MESSAGE,
   guessLanguage, toUiLanguage, type UiLanguage,
@@ -45,7 +46,15 @@ function urgentResponse(
 
 const categories = (matches: RedFlagMatch[]) => matches.map((m) => m.category);
 
-export async function analyze(req: AnalyzeRequest): Promise<AnalyzeResponse> {
+export interface AnalyzeOptions {
+  /** Skip saved demo answers (used by the script that generates them). */
+  skipDemoCache?: boolean;
+}
+
+export async function analyze(
+  req: AnalyzeRequest,
+  { skipDemoCache = false }: AnalyzeOptions = {},
+): Promise<AnalyzeResponse> {
   const t0 = Date.now();
   const text = req.text?.trim() ?? "";
   // A language picked in the UI wins; on "auto" we answer in the language she used.
@@ -58,6 +67,15 @@ export async function analyze(req: AnalyzeRequest): Promise<AnalyzeResponse> {
     return urgentResponse(picked ? toUiLanguage(picked) : guessLanguage(text), categories(typedFlags), {
       transcript: isProd ? undefined : text,
     });
+  }
+
+  // Demo cache, typed input — only after the red-flag check, so it can never hide an emergency.
+  if (!skipDemoCache && !req.audioBase64) {
+    const demo = findDemoFixture(text, req.language || "auto");
+    if (demo) {
+      logStep("demo cache hit", t0, demo.input.id);
+      return demo.analysis;
+    }
   }
 
   // Step B — extraction (also transcribes audio) and a second, AI-based red-flag judgement.
@@ -80,6 +98,15 @@ export async function analyze(req: AnalyzeRequest): Promise<AnalyzeResponse> {
       symptoms: details.symptoms,
       detectedLanguage: details.detectedLanguage,
     });
+  }
+
+  // Demo cache, spoken input — matched on the transcript, after both red-flag checks.
+  if (!skipDemoCache && req.audioBase64) {
+    const demo = findDemoFixture(details.transcript, req.language || "auto", true);
+    if (demo && demo.analysis.urgency !== "urgent") {
+      logStep("demo cache hit (voice)", t0, demo.input.id);
+      return { ...demo.analysis, transcript: details.transcript };
+    }
   }
 
   const base = {

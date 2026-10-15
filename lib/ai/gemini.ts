@@ -1,9 +1,13 @@
 import { ApiError, GoogleGenAI, ThinkingLevel, type Part } from "@google/genai";
 
-// Main model, and a lighter model used when the main one is overloaded or slow.
-// The free tier's newest flash model often returns 503 "high demand"; flash-lite stays fast.
-const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
-const FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || "gemini-flash-lite-latest";
+// Main model, and a different model used when the main one is overloaded or slow.
+// Measured 2026-10-15 on the free tier: gemini-flash-latest (3.8) often 503s; gemini-3.5-flash
+// was fastest (text ~3 s, audio ~6 s); flash-lite works but was slower under load.
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+const FALLBACK_MODEL =
+  [process.env.GEMINI_FALLBACK_MODEL, "gemini-flash-lite-latest", "gemini-3.5-flash"].find(
+    (m) => m && m !== MODEL,
+  ) as string;
 // Two attempts of 10 s each keep the whole call inside the plan's 20 s limit.
 const ATTEMPT_TIMEOUT_MS = 10_000;
 // Rate limit (429) and temporary overload (500, 503): worth one retry.
@@ -22,8 +26,14 @@ function getClient() {
 
 function isRetryable(err: unknown) {
   if (err instanceof ApiError) return RETRYABLE_STATUS.has(err.status);
-  // Our own timeout aborts the request.
-  return err instanceof Error && (err.name === "AbortError" || err.name === "TimeoutError");
+  if (!(err instanceof Error)) return false;
+  // Our own timeout aborts the request; "fetch failed" is a dropped network connection.
+  return err.name === "AbortError" || err.name === "TimeoutError" || err.message === "fetch failed";
+}
+
+function reason(err: unknown) {
+  if (err instanceof ApiError) return `HTTP ${err.status}`;
+  return err instanceof Error ? err.message : String(err);
 }
 
 export interface CallGeminiOptions {
@@ -65,7 +75,7 @@ export async function callGemini<T>(
     response = await request(MODEL);
   } catch (err) {
     if (!isRetryable(err)) throw err;
-    console.warn(`[gemini] ${MODEL} unavailable, retrying on ${FALLBACK_MODEL}`);
+    console.warn(`[gemini] ${MODEL} failed (${reason(err)}), retrying on ${FALLBACK_MODEL}`);
     response = await request(FALLBACK_MODEL);
   }
 

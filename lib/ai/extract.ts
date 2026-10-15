@@ -58,7 +58,10 @@ export async function extractDetails({ text, audio, language }: ExtractInput): P
   const parts: Part[] = audio ? [{ inlineData: { data: audio.base64, mimeType: audio.mimeType } }] : [];
   const prompt = [
     loadPrompt("extract.md"),
-    language !== "auto" ? `The user selected this language: ${language}.` : "",
+    language !== "auto"
+      ? `The user selected this language: ${language}. Write followUpQuestions in that language. ` +
+        "Still set detectedLanguage to the language she actually used."
+      : "",
     audio
       ? "The user's description is in the attached audio. Transcribe it first."
       : `User's description:\n"""\n${text}\n"""`,

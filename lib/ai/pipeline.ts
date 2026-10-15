@@ -48,12 +48,14 @@ const categories = (matches: RedFlagMatch[]) => matches.map((m) => m.category);
 export async function analyze(req: AnalyzeRequest): Promise<AnalyzeResponse> {
   const t0 = Date.now();
   const text = req.text?.trim() ?? "";
+  // A language picked in the UI wins; on "auto" we answer in the language she used.
+  const picked = req.language && req.language !== "auto" ? req.language : null;
 
   // Step A — keyword red flags on typed text. A match stops here: no AI explanation.
   const typedFlags = checkRedFlags(text);
   logStep("A redFlags", t0, `matches=${typedFlags.length}`);
   if (typedFlags.length > 0) {
-    return urgentResponse(guessLanguage(text), categories(typedFlags), {
+    return urgentResponse(picked ? toUiLanguage(picked) : guessLanguage(text), categories(typedFlags), {
       transcript: isProd ? undefined : text,
     });
   }
@@ -66,7 +68,8 @@ export async function analyze(req: AnalyzeRequest): Promise<AnalyzeResponse> {
       ? { base64: req.audioBase64, mimeType: req.audioMimeType }
       : undefined,
   });
-  const lang = toUiLanguage(details.detectedLanguage);
+  const answerLanguage = picked ?? details.detectedLanguage;
+  const lang = toUiLanguage(answerLanguage);
   const spokenFlags = req.audioBase64 ? checkRedFlags(details.transcript) : [];
   logStep("B extract", t0, `urgent=${details.isUrgent} lang=${details.detectedLanguage}`);
 
@@ -103,7 +106,7 @@ export async function analyze(req: AnalyzeRequest): Promise<AnalyzeResponse> {
   if (chunks.length === 0) return fallback;
 
   // Step D + E — grounded explanation, then the safety filter (one regeneration allowed).
-  let result = await writeExplanation(details, chunks);
+  let result = await writeExplanation(details, chunks, answerLanguage);
   const textsOf = (r: typeof result) => [r.explanation, ...r.questionsForDoctor];
   let banned = findBannedContent(textsOf(result));
   logStep("D explain", t0, `banned=${banned.length}`);
@@ -111,6 +114,7 @@ export async function analyze(req: AnalyzeRequest): Promise<AnalyzeResponse> {
     result = await writeExplanation(
       details,
       chunks,
+      answerLanguage,
       "IMPORTANT: your previous answer broke the rules (diagnosis words or medicine names). " +
         "Rewrite it without saying she has any condition, and without naming any medicine, tablet or dose.",
     );

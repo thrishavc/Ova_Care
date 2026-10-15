@@ -42,6 +42,7 @@ const SCHEMA = {
 export async function writeExplanation(
   details: Extraction,
   chunks: KnowledgeChunk[],
+  answerLanguage: string,
   correction?: string,
 ): Promise<Explanation> {
   const sources = chunks
@@ -50,7 +51,7 @@ export async function writeExplanation(
 
   const prompt = [
     loadPrompt("explain.md"),
-    `Answer in this language and script: ${details.detectedLanguage}`,
+    `Answer in this language and script: ${answerLanguage}`,
     `What she said:\n"""\n${details.transcript}\n"""`,
     `Symptoms we understood:\n${JSON.stringify(details.symptoms)}`,
     `SOURCES:\n${sources}`,

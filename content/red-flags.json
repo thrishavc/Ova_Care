@@ -1,0 +1,134 @@
+[
+  {
+    "phrase": "I am soaking a pad every hour",
+    "language": "en",
+    "category": "very_heavy_bleeding",
+    "action": "urgent_medical_care"
+  },
+  {
+    "phrase": "I am bleeding very heavily and feel dizzy",
+    "language": "en",
+    "category": "very_heavy_bleeding",
+    "action": "emergency_care"
+  },
+  {
+    "phrase": "मेरा पैड हर घंटे पूरी तरह भीग रहा है",
+    "language": "hi",
+    "category": "very_heavy_bleeding",
+    "action": "urgent_medical_care"
+  },
+  {
+    "phrase": "Mera pad har ghante poora bheeg raha hai",
+    "language": "hinglish",
+    "category": "very_heavy_bleeding",
+    "action": "urgent_medical_care"
+  },
+  {
+    "phrase": "I feel like fainting",
+    "language": "en",
+    "category": "fainting_or_severe_dizziness",
+    "action": "emergency_care"
+  },
+  {
+    "phrase": "मुझे चक्कर आ रहे हैं और बेहोशी जैसा लग रहा है",
+    "language": "hi",
+    "category": "fainting_or_severe_dizziness",
+    "action": "emergency_care"
+  },
+  {
+    "phrase": "Mujhe chakkar aa rahe hain aur behosh hone jaisa lag raha hai",
+    "language": "hinglish",
+    "category": "fainting_or_severe_dizziness",
+    "action": "emergency_care"
+  },
+  {
+    "phrase": "I suddenly have severe abdominal pain",
+    "language": "en",
+    "category": "sudden_severe_abdominal_pain",
+    "action": "emergency_care"
+  },
+  {
+    "phrase": "मेरे पेट में अचानक बहुत तेज दर्द हो रहा है",
+    "language": "hi",
+    "category": "sudden_severe_abdominal_pain",
+    "action": "emergency_care"
+  },
+  {
+    "phrase": "Mere pet mein achanak bahut tez dard ho raha hai",
+    "language": "hinglish",
+    "category": "sudden_severe_abdominal_pain",
+    "action": "emergency_care"
+  },
+  {
+    "phrase": "I have a fever and pelvic pain",
+    "language": "en",
+    "category": "fever_with_pelvic_pain",
+    "action": "urgent_medical_care"
+  },
+  {
+    "phrase": "मुझे बुखार है और पेट के निचले हिस्से में दर्द है",
+    "language": "hi",
+    "category": "fever_with_pelvic_pain",
+    "action": "urgent_medical_care"
+  },
+  {
+    "phrase": "Mujhe bukhar hai aur lower abdomen mein dard hai",
+    "language": "hinglish",
+    "category": "fever_with_pelvic_pain",
+    "action": "urgent_medical_care"
+  },
+  {
+    "phrase": "I might be pregnant and have abdominal pain or bleeding",
+    "language": "en",
+    "category": "possible_pregnancy_with_pain_or_bleeding",
+    "action": "emergency_care"
+  },
+  {
+    "phrase": "मुझे गर्भावस्था की संभावना है और पेट में दर्द या खून आ रहा है",
+    "language": "hi",
+    "category": "possible_pregnancy_with_pain_or_bleeding",
+    "action": "emergency_care"
+  },
+  {
+    "phrase": "Pregnancy ho sakti hai aur pet mein dard ya bleeding ho rahi hai",
+    "language": "hinglish",
+    "category": "possible_pregnancy_with_pain_or_bleeding",
+    "action": "emergency_care"
+  },
+  {
+    "phrase": "I have bleeding after menopause",
+    "language": "en",
+    "category": "bleeding_after_menopause",
+    "action": "prompt_medical_assessment"
+  },
+  {
+    "phrase": "मेनोपॉज़ के बाद मुझे खून आ रहा है",
+    "language": "hi",
+    "category": "bleeding_after_menopause",
+    "action": "prompt_medical_assessment"
+  },
+  {
+    "phrase": "Menopause ke baad bleeding ho rahi hai",
+    "language": "hinglish",
+    "category": "bleeding_after_menopause",
+    "action": "prompt_medical_assessment"
+  },
+  {
+    "phrase": "I am thinking about hurting myself",
+    "language": "en",
+    "category": "self_harm_risk",
+    "action": "immediate_crisis_support"
+  },
+  {
+    "phrase": "मुझे खुद को नुकसान पहुँचाने के विचार आ रहे हैं",
+    "language": "hi",
+    "category": "self_harm_risk",
+    "action": "immediate_crisis_support"
+  },
+  {
+    "phrase": "Mujhe khud ko harm karne ke thoughts aa rahe hain",
+    "language": "hinglish",
+    "category": "self_harm_risk",
+    "action": "immediate_crisis_support"
+  }
+]

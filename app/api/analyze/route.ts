@@ -1,11 +1,11 @@
 import type { AnalyzeRequest, ApiError } from "@/lib/types";
-import { SAMPLE_RESPONSE } from "@/lib/ai/sampleResponse";
+import { analyze } from "@/lib/ai/pipeline";
 
 const MAX_TEXT_CHARS = 2000;
 
-function badRequest(message: string) {
-  const body: ApiError = { error: "bad_request", message };
-  return Response.json(body, { status: 400 });
+function errorResponse(status: number, error: string, message: string) {
+  const body: ApiError = { error, message };
+  return Response.json(body, { status });
 }
 
 export async function POST(request: Request) {
@@ -13,17 +13,32 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return badRequest("Please send your symptoms as JSON.");
+    return errorResponse(400, "bad_request", "Please send your symptoms as JSON.");
   }
 
   const text = typeof body.text === "string" ? body.text.trim() : "";
   if (!text && !body.audioBase64) {
-    return badRequest("Please type or record your symptoms.");
+    return errorResponse(400, "bad_request", "Please type or record your symptoms.");
   }
   if (text.length > MAX_TEXT_CHARS) {
-    return badRequest(`Please keep your message under ${MAX_TEXT_CHARS} characters.`);
+    return errorResponse(400, "bad_request", `Please keep your message under ${MAX_TEXT_CHARS} characters.`);
   }
 
-  // Phase 1: hard-coded reply so the frontend can be built against the contract.
-  return Response.json(SAMPLE_RESPONSE);
+  try {
+    const result = await analyze({
+      text,
+      audioBase64: body.audioBase64 ?? null,
+      audioMimeType: body.audioMimeType ?? null,
+      language: body.language ?? "auto",
+      sessionId: body.sessionId ?? "",
+    });
+    return Response.json(result);
+  } catch (err) {
+    console.error("[analyze] failed:", err instanceof Error ? err.message : err);
+    return errorResponse(
+      503,
+      "unavailable",
+      "Something went wrong while understanding your symptoms. Please try again in a moment.",
+    );
+  }
 }
